@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  password         String?
+  name             String?
+  avatar           String?
+  telegramChatId   String?  @unique
+  telegramUsername String?
+  preferences      Json?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Subscription
+  subscription     Subscription?
+  
+  // OAuth Accounts
+  accounts         Account[]
+  
+  // AI Interactions
+  conversations    Conversation[]
+  proactiveMessages ProactiveMessage[]
+  userContext      UserContext?
+  
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  plan      String
+  status    String
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("subscriptions")
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String?
+  context     Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // 'user', 'assistant', 'system'
+  content        String
+  metadata       Json?
+  telegramMessageId String?
+  source         String   @default("web") // 'web', 'telegram'
+  createdAt      DateTime @default(now())
+  
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@map("messages")
+}
+
+model UserContext {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  currentGoals    Json?
+  preferences     Json?
+  schedule        Json?
+  interests       Json?
+  recentActivity  Json?
+  contextData     Json?
+  lastAnalyzed    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_contexts")
+}
+
+model ProactiveMessage {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'suggestion', 'reminder', 'question', 'update'
+  title       String
+  content     String
+  metadata    Json?
+  status      String   @default("pending") // 'pending', 'sent', 'delivered', 'read', 'responded'
+  scheduledFor DateTime?
+  sentAt      DateTime?
+  responseReceived Boolean @default(false)
+  telegramMessageId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("proactive_messages")
+}
+
+model AIAnalysisJob {
+  id          String   @id @default(cuid())
+  type        String   // 'context_analysis', 'proactive_check', 'user_analysis'
+  status      String   @default("pending") // 'pending', 'running', 'completed', 'failed'
+  parameters  Json?
+  result      Json?
+  error       String?
+  scheduledFor DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  
+  @@map("ai_analysis_jobs")
+}
+
+model SystemSettings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+  
+  @@map("system_settings")
+}

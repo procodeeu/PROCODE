@@ -1,0 +1,29 @@
+{
+  "name": "procode",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "start": "node .output/server/index.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@nuxt/typescript-build": "^3.0.2",
+    "@pinia/nuxt": "^0.11.0",
+    "@prisma/client": "^6.8.2",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "nuxt": "^3.17.4",
+    "pinia": "^3.0.2",
+    "prisma": "^6.8.2",
+    "typescript": "^5.8.3",
+    "vue-tsc": "^2.2.10"
+  }
+}
