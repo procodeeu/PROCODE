@@ -6,8 +6,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   modules: [
     '@pinia/nuxt',
-    '@nuxtjs/tailwindcss',
-    '@sidebase/nuxt-auth'
+    '@nuxtjs/tailwindcss'
   ],
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -19,12 +18,6 @@ export default defineNuxtConfig({
     public: {
       apiBase: '/api',
       authUrl: process.env.NUXT_AUTH_ORIGIN
-    }
-  },
-  auth: {
-    baseURL: process.env.NUXT_AUTH_ORIGIN,
-    provider: {
-      type: 'authjs'
     }
   }
 })
