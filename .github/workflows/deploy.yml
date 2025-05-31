@@ -62,3 +62,4 @@ jobs:
             # Wait for database and run migrations
             sleep 15
             docker-compose exec -T app npx prisma migrate deploy
+            docker-compose exec -T app npx prisma generate
