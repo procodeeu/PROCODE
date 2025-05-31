@@ -1,0 +1,29 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Prisma generated files
+/generated/prisma
+
+# Local env files
+.env*
+!.env.example
+
+# Note: .env.example is a template
+# Copy and modify it with your actual keys before use
