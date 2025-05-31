@@ -18,22 +18,23 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            # Install Git if not present
+            # Install Git if not present (AlmaLinux uses dnf/yum)
             if ! command -v git &> /dev/null; then
-                apt update -y
-                apt install git -y
+                dnf update -y || yum update -y
+                dnf install git -y || yum install git -y
             fi
             
             # Install Docker if not present  
             if ! command -v docker &> /dev/null; then
-                curl -fsSL https://get.docker.com -o get-docker.sh
-                sh get-docker.sh
+                dnf install -y dnf-plugins-core || yum install -y yum-utils
+                dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo || yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+                dnf install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y || yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
                 systemctl enable docker
                 systemctl start docker
             fi
             
-            # Install Docker Compose if not present
-            if ! command -v docker-compose &> /dev/null; then
+            # Docker Compose is included in newer Docker installations
+            if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
                 curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
                 chmod +x /usr/local/bin/docker-compose
             fi
