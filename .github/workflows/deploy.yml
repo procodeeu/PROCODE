@@ -18,9 +18,46 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            cd /root/procode || git clone https://github.com/${{ github.repository }} /root/procode && cd /root/procode
-            git pull origin main
+            # Install Git if not present
+            if ! command -v git &> /dev/null; then
+                apt update -y
+                apt install git -y
+            fi
+            
+            # Install Docker if not present  
+            if ! command -v docker &> /dev/null; then
+                curl -fsSL https://get.docker.com -o get-docker.sh
+                sh get-docker.sh
+                systemctl enable docker
+                systemctl start docker
+            fi
+            
+            # Install Docker Compose if not present
+            if ! command -v docker-compose &> /dev/null; then
+                curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                chmod +x /usr/local/bin/docker-compose
+            fi
+            
+            # Clone or update repository
+            if [ ! -d "/root/procode" ]; then
+                git clone https://github.com/${{ github.repository }} /root/procode
+            else
+                cd /root/procode
+                git pull origin main
+            fi
+            
+            cd /root/procode
+            
+            # Create .env if not exists
+            if [ ! -f ".env" ]; then
+                cp .env.example .env
+            fi
+            
+            # Deploy application
             docker-compose down
             docker-compose build --no-cache
             docker-compose up -d
+            
+            # Wait for database and run migrations
+            sleep 15
             docker-compose exec -T app npx prisma migrate deploy
