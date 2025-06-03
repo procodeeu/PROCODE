@@ -8,9 +8,14 @@
             <h1 class="text-2xl font-bold text-gray-900">Welcome back!</h1>
             <p class="text-gray-600">Manage your AI assistant and conversations</p>
           </div>
-          <button @click="logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-            Sign Out
-          </button>
+          <div class="flex items-center space-x-3">
+            <NuxtLink to="/models" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+              🤖 Modele AI
+            </NuxtLink>
+            <button @click="logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+              Sign Out
+            </button>
+          </div>
         </div>
       </div>
 
@@ -59,17 +64,13 @@
         </div>
       </div>
 
+      <!-- Chat Panel -->
+      <div class="mb-6">
+        <ChatPanel />
+      </div>
+
       <!-- Quick Actions -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Start Chat -->
-        <div class="bg-white p-6 rounded-lg shadow">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Start New Chat</h3>
-          <p class="text-gray-600 mb-4">Begin a conversation with your AI assistant</p>
-          <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium">
-            New Conversation
-          </button>
-        </div>
-
         <!-- Telegram Setup -->
         <div class="bg-white p-6 rounded-lg shadow">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Telegram Integration</h3>

@@ -1,10 +1,13 @@
 import process from 'node:process';globalThis._importMeta_={url:import.meta.url,env:process.env};import { tmpdir } from 'node:os';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, createError, getRouterParam, getResponseStatusText } from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, createError, getRouterParam, setCookie, getResponseStatusText } from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/h3/dist/index.mjs';
 import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
 import { escapeHtml } from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/@vue/shared/dist/shared.cjs.js';
+import bcrypt from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/bcryptjs/index.js';
+import jwt from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/jsonwebtoken/index.js';
+import { PrismaClient } from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/@prisma/client/default.js';
 import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/vue-bundle-renderer/dist/runtime.mjs';
 import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, joinRelativeURL } from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/ufo/dist/index.mjs';
 import { renderToString } from 'file:///Users/karol/Documents/GitHub/PROCODE/node_modules/vue/server-renderer/index.mjs';
@@ -645,9 +648,16 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "apiBase": "/api"
+    "apiBase": "/api",
+    "authUrl": "http://localhost:3000"
   },
-  "databaseUrl": "postgresql://postgres:password@localhost:5432/procode"
+  "databaseUrl": "file:./dev.db",
+  "authSecret": "local-dev-secret-key-123",
+  "googleClientId": "",
+  "googleClientSecret": "",
+  "githubClientId": "",
+  "githubClientSecret": "",
+  "openrouterApiKey": "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"
 };
 const envOptions = {
   prefix: "NITRO_",
@@ -1430,9 +1440,17 @@ async function getIslandContext(event) {
   return ctx;
 }
 
+const _lazy_t5ST0q = () => Promise.resolve().then(function () { return login_post$1; });
+const _lazy_4Zc7rd = () => Promise.resolve().then(function () { return logout_post$1; });
+const _lazy_yT2OHu = () => Promise.resolve().then(function () { return register_post$1; });
+const _lazy_6sGGA3 = () => Promise.resolve().then(function () { return chat_post$1; });
 const _lazy_yJEqcG = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
+  { route: '/api/auth/login', handler: _lazy_t5ST0q, lazy: true, middleware: false, method: "post" },
+  { route: '/api/auth/logout', handler: _lazy_4Zc7rd, lazy: true, middleware: false, method: "post" },
+  { route: '/api/auth/register', handler: _lazy_yT2OHu, lazy: true, middleware: false, method: "post" },
+  { route: '/api/chat', handler: _lazy_6sGGA3, lazy: true, middleware: false, method: "post" },
   { route: '/__nuxt_error', handler: _lazy_yJEqcG, lazy: true, middleware: false, method: undefined },
   { route: '/__nuxt_island/**', handler: _SxA8c9, lazy: false, middleware: false, method: undefined },
   { route: '/**', handler: _lazy_yJEqcG, lazy: true, middleware: false, method: undefined }
@@ -1761,6 +1779,204 @@ const styles = {};
 const styles$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   default: styles
+});
+
+var _a;
+const globalForPrisma = globalThis;
+const prisma = (_a = globalForPrisma.prisma) != null ? _a : new PrismaClient();
+globalForPrisma.prisma = prisma;
+
+const login_post = defineEventHandler(async (event) => {
+  const { email, password } = await readBody(event);
+  if (!email || !password) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Email and password are required"
+    });
+  }
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+    if (!user || !user.password) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Invalid credentials"
+      });
+    }
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Invalid credentials"
+      });
+    }
+    const config = useRuntimeConfig();
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      config.authSecret || "fallback-secret",
+      { expiresIn: "7d" }
+    );
+    setCookie(event, "auth-token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7
+      // 7 days
+    });
+    return {
+      message: "Login successful",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      }
+    };
+  } catch (error) {
+    if (error.statusCode) {
+      throw error;
+    }
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Internal server error"
+    });
+  }
+});
+
+const login_post$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  default: login_post
+});
+
+const logout_post = defineEventHandler(async (event) => {
+  setCookie(event, "auth-token", "", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 0
+    // Expire immediately
+  });
+  return {
+    message: "Logged out successfully"
+  };
+});
+
+const logout_post$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  default: logout_post
+});
+
+const register_post = defineEventHandler(async (event) => {
+  const { name, email, password } = await readBody(event);
+  if (!name || !email || !password) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing required fields"
+    });
+  }
+  if (password.length < 8) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Password must be at least 8 characters"
+    });
+  }
+  try {
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+    if (existingUser) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "User already exists with this email"
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true
+      }
+    });
+    return {
+      message: "User created successfully",
+      user
+    };
+  } catch (error) {
+    if (error.statusCode) {
+      throw error;
+    }
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Internal server error"
+    });
+  }
+});
+
+const register_post$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  default: register_post
+});
+
+const chat_post = defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
+  const body = await readBody(event);
+  if (!body.message || typeof body.message !== "string") {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Message is required and must be a string"
+    });
+  }
+  if (!config.openrouterApiKey) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: "OpenRouter API key not configured"
+    });
+  }
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${config.openrouterApiKey}`,
+        "HTTP-Referer": "http://localhost",
+        "X-Title": "ProCode Chat App"
+      },
+      body: JSON.stringify({
+        model: "mistralai/devstral-small:free",
+        messages: [
+          { role: "user", content: body.message }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    const aiMessage = data.choices && data.choices.length > 0 ? data.choices[0].message.content : "Brak odpowiedzi z AI";
+    return {
+      message: aiMessage,
+      model: "mistralai/devstral-small:free"
+    };
+  } catch (error) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: `Error communicating with OpenRouter: ${error.message}`
+    });
+  }
+});
+
+const chat_post$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  default: chat_post
 });
 
 function renderPayloadResponse(ssrContext) {

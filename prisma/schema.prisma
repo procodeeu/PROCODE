@@ -22,6 +22,8 @@ model User {
   telegramChatId   String?  @unique
   telegramUsername String?
   preferences      Json?
+  preferredModels  String[] @default([])
+  currentModel     String?  @default("mistralai/devstral-small:free")
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
