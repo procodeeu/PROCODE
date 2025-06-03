@@ -12,6 +12,12 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  console.log('Runtime config check:', {
+    hasOpenrouterKey: !!config.openrouterApiKey,
+    keyLength: config.openrouterApiKey?.length || 0,
+    keyPrefix: config.openrouterApiKey?.substring(0, 10) || 'undefined'
+  })
+
   if (!config.openrouterApiKey) {
     throw createError({
       statusCode: 500,
@@ -46,7 +52,7 @@ export default defineEventHandler(async (event) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.openrouterApiKey}`,
-        'HTTP-Referer': 'http://localhost',
+        'HTTP-Referer': 'http://localhost:3000',
         'X-Title': 'ProCode Chat App'
       },
       body: JSON.stringify({
@@ -60,7 +66,15 @@ export default defineEventHandler(async (event) => {
     })
 
     if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`)
+      const errorText = await response.text()
+      console.error('OpenRouter API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        model: modelToUse,
+        hasApiKey: !!config.openrouterApiKey
+      })
+      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const data = await response.json()

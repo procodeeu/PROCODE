@@ -10,7 +10,7 @@
           </div>
           <div class="flex items-center space-x-3">
             <NuxtLink to="/models" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-              🤖 Modele AI
+              🤖 Lista modeli AI 
             </NuxtLink>
             <button @click="logout" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
               Sign Out

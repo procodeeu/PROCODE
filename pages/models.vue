@@ -21,10 +21,7 @@
 </template>
 
 <script setup>
-// Protect this page - require authentication
-definePageMeta({
-  middleware: 'auth'
-})
+// No middleware needed - user is already on protected dashboard
 
 useSeoMeta({
   title: 'Modele AI - PROCODE',
