@@ -9,6 +9,9 @@
             <p class="text-gray-600">Manage your AI assistant and conversations</p>
           </div>
           <div class="flex items-center space-x-3">
+            <NuxtLink to="/conversations" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+              💬 Archiwum rozmów
+            </NuxtLink>
             <NuxtLink to="/models" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
               🤖 Lista modeli AI 
             </NuxtLink>

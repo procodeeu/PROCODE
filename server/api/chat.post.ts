@@ -4,6 +4,7 @@ import { prisma } from '~/lib/prisma'
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const body = await readBody(event)
+  const startTime = Date.now()
   
   if (!body.message || typeof body.message !== 'string') {
     throw createError({
@@ -47,6 +48,16 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    // Prepare request data
+    const requestData = {
+      model: modelToUse,
+      messages: [
+        { role: 'user', content: body.message }
+      ],
+      max_tokens: 500,
+      temperature: 0.7
+    }
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -55,15 +66,10 @@ export default defineEventHandler(async (event) => {
         'HTTP-Referer': 'http://localhost:3000',
         'X-Title': 'ProCode Chat App'
       },
-      body: JSON.stringify({
-        model: modelToUse,
-        messages: [
-          { role: 'user', content: body.message }
-        ],
-        max_tokens: 500,
-        temperature: 0.7
-      })
+      body: JSON.stringify(requestData)
     })
+
+    const latency = Date.now() - startTime
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -83,14 +89,57 @@ export default defineEventHandler(async (event) => {
       ? data.choices[0].message.content
       : 'Brak odpowiedzi z AI'
 
+    // Get model metadata from our models cache/API
+    let modelData = null
+    try {
+      const modelsResponse = await fetch(`${config.public.apiBase || '/api'}/models`, {
+        headers: {
+          'Authorization': `Bearer ${config.openrouterApiKey}`
+        }
+      })
+      if (modelsResponse.ok) {
+        const modelsData = await modelsResponse.json()
+        modelData = modelsData.models?.find((m: any) => m.id === modelToUse) || null
+      }
+    } catch (err) {
+      console.warn('Could not fetch model metadata:', err)
+    }
+
     return {
       message: aiMessage,
-      model: modelToUse
+      model: modelToUse,
+      responseMetadata: {
+        requestData,
+        responseData: data,
+        modelData,
+        latency,
+        tokensUsed: data.usage || null,
+        status: 'success'
+      }
     }
   } catch (error: any) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: `Error communicating with OpenRouter: ${error.message}`
-    })
+    const latency = Date.now() - startTime
+    
+    return {
+      message: 'Przepraszam, wystąpił błąd podczas generowania odpowiedzi.',
+      model: modelToUse,
+      responseMetadata: {
+        requestData: {
+          model: modelToUse,
+          messages: [{ role: 'user', content: body.message }],
+          max_tokens: 500,
+          temperature: 0.7
+        },
+        responseData: null,
+        modelData: null,
+        latency,
+        tokensUsed: null,
+        status: 'error',
+        errorDetails: {
+          message: error.message,
+          timestamp: new Date().toISOString()
+        }
+      }
+    }
   }
 })

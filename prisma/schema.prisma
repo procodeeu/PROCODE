@@ -105,8 +105,28 @@ model Message {
   createdAt      DateTime @default(now())
   
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  aiResponse   AIResponse?
   
   @@map("messages")
+}
+
+model AIResponse {
+  id              String   @id @default(cuid())
+  messageId       String   @unique
+  modelId         String   // Model ID used (e.g., "mistralai/devstral-small:free")
+  modelData       Json     // Full model metadata from /api/models
+  requestData     Json     // Request sent to OpenRouter (prompt, params, etc.)
+  responseData    Json     // Full response from OpenRouter API
+  tokensUsed      Json?    // Token usage info (prompt_tokens, completion_tokens, total_tokens)
+  cost            Decimal? @db.Decimal(10, 8) // Cost in USD
+  latency         Int?     // Response time in milliseconds
+  status          String   @default("success") // 'success', 'error', 'timeout'
+  errorDetails    Json?    // Error information if failed
+  createdAt       DateTime @default(now())
+  
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@map("ai_responses")
 }
 
 model UserContext {
