@@ -9,6 +9,9 @@
             <p class="text-gray-600">Manage your AI assistant and conversations</p>
           </div>
           <div class="flex items-center space-x-3">
+            <NuxtLink to="/context" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+              🧠 Mój Kontekst
+            </NuxtLink>
             <NuxtLink to="/conversations" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
               💬 Archiwum rozmów
             </NuxtLink>
@@ -76,11 +79,42 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Telegram Setup -->
         <div class="bg-white p-6 rounded-lg shadow">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Telegram Integration</h3>
-          <p class="text-gray-600 mb-4">Connect your Telegram to receive proactive notifications</p>
-          <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium">
-            Connect Telegram
-          </button>
+          <h3 class="text-lg font-medium text-gray-900 mb-4">🤖 Telegram Integration</h3>
+          <p class="text-gray-600 mb-4">Połącz swój Telegram aby otrzymywać proaktywne powiadomienia od AI</p>
+          <div class="space-y-3">
+            <button 
+              @click="generateTelegramToken"
+              :disabled="isGeneratingToken"
+              class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-md font-medium"
+            >
+              {{ isGeneratingToken ? '⏳ Generowanie...' : '📱 Połącz z Telegram' }}
+            </button>
+            
+            <!-- Error message -->
+            <div v-if="tokenError" class="bg-red-50 border border-red-200 rounded-md p-3">
+              <p class="text-red-600 text-sm">{{ tokenError }}</p>
+            </div>
+            
+            <!-- Token instructions -->
+            <div v-if="showTokenInstructions" class="bg-blue-50 border border-blue-200 rounded-md p-4 space-y-3">
+              <h4 class="font-medium text-blue-900">📋 Instrukcje połączenia:</h4>
+              <ol class="text-sm text-blue-800 space-y-1">
+                <li>1. Otwórz Telegram i znajdź <strong>@procodeeu_bot</strong></li>
+                <li>2. Wyślij następującą komendę (kliknij aby skopiować):</li>
+              </ol>
+              <div 
+                @click="copyTokenToClipboard"
+                class="bg-gray-100 p-2 rounded font-mono text-sm cursor-pointer hover:bg-gray-200 border"
+              >
+                /connect {{ telegramToken }}
+              </div>
+              <p class="text-xs text-blue-600">Token jest ważny przez 24 godziny</p>
+            </div>
+            
+            <p class="text-xs text-gray-500">
+              Kliknij aby wygenerować unikalny token, następnie napisz do @procodeeu_bot
+            </p>
+          </div>
         </div>
       </div>
 
@@ -114,9 +148,45 @@
 </template>
 
 <script setup>
+const isGeneratingToken = ref(false)
+const telegramToken = ref('')
+const showTokenInstructions = ref(false)
+const tokenError = ref('')
+
 const logout = async () => {
   await $fetch('/api/auth/logout', { method: 'POST' })
   await navigateTo('/login')
+}
+
+const generateTelegramToken = async () => {
+  isGeneratingToken.value = true
+  tokenError.value = ''
+  telegramToken.value = ''
+  showTokenInstructions.value = false
+  
+  try {
+    const response = await $fetch('/api/user/telegram-token', {
+      method: 'POST'
+    })
+    
+    if (response.success) {
+      telegramToken.value = response.token
+      showTokenInstructions.value = true
+    }
+  } catch (error) {
+    tokenError.value = `Błąd podczas generowania tokenu: ${error.message || 'Nieznany błąd'}`
+  } finally {
+    isGeneratingToken.value = false
+  }
+}
+
+const copyTokenToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(`/connect ${telegramToken.value}`)
+    // You could add a toast notification here
+  } catch (err) {
+    console.error('Failed to copy to clipboard:', err)
+  }
 }
 
 useSeoMeta({

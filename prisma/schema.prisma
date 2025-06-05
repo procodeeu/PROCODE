@@ -38,6 +38,7 @@ model User {
   conversations    Conversation[]
   proactiveMessages ProactiveMessage[]
   userContext      UserContext?
+  telegramConnection TelegramConnection?
   
   @@map("users")
 }
@@ -132,13 +133,33 @@ model AIResponse {
 model UserContext {
   id              String   @id @default(cuid())
   userId          String   @unique
-  currentGoals    Json?
-  preferences     Json?
-  schedule        Json?
-  interests       Json?
-  recentActivity  Json?
-  contextData     Json?
+  
+  // Life Context
+  personalBio     String?  // Comprehensive life story, background
+  currentSituation String? // Current life circumstances
+  longTermGoals   Json?    // Life goals (career, personal, financial)
+  shortTermGoals  Json?    // Goals for next 3-6 months
+  challenges      Json?    // Current problems/obstacles
+  
+  // Professional Context
+  workContext     Json?    // Job, industry, responsibilities
+  skillsToLearn   Json?    // Learning objectives
+  careerPlans     Json?    // Career development plans
+  
+  // Personal Context
+  dailyRoutine    Json?    // Daily schedule and habits
+  interests       Json?    // Hobbies, passions, interests
+  relationships   Json?    // Family, friends, network
+  healthGoals     Json?    // Physical/mental health objectives
+  
+  // AI Interaction Preferences
+  communicationStyle Json? // How user prefers to be contacted
+  proactiveTopics Json?    // What topics to be proactive about
+  notificationSettings Json? // When and how often to reach out
+  
+  // System Fields
   lastAnalyzed    DateTime @default(now())
+  analysisResults Json?    // Latest AI analysis results
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
@@ -180,6 +201,21 @@ model AIAnalysisJob {
   createdAt   DateTime @default(now())
   
   @@map("ai_analysis_jobs")
+}
+
+model TelegramConnection {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  telegramChatId  String   @unique
+  telegramUsername String?
+  connectionToken String   @unique // Token for secure linking
+  isActive        Boolean  @default(true)
+  connectedAt     DateTime @default(now())
+  lastMessageAt   DateTime?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("telegram_connections")
 }
 
 model SystemSettings {
