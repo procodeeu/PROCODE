@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken'
 import { prisma } from '~/lib/prisma'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   const body = await readBody(event)
   
   // Get auth token from cookies
@@ -17,7 +16,8 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Verify JWT token
-    const decoded = jwt.verify(token, config.authSecret) as { userId: string }
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret'
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string }
     
     // Upsert user context (create or update)
     const userContext = await prisma.userContext.upsert({

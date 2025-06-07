@@ -3,7 +3,6 @@ import crypto from 'crypto'
 import { prisma } from '~/lib/prisma'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   
   // Get auth token from cookies
   const token = getCookie(event, 'auth-token')
@@ -17,10 +16,11 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Verify JWT token
-    const decoded = jwt.verify(token, config.authSecret) as { userId: string }
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret'
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string }
     
-    // Generate unique connection token
-    const connectionToken = crypto.randomBytes(32).toString('hex')
+    // Generate unique connection token (shorter to avoid Telegram message splitting)
+    const connectionToken = crypto.randomBytes(16).toString('hex')
     
     // Delete any existing telegram connection for this user
     await prisma.telegramConnection.deleteMany({

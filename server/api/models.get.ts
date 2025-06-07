@@ -1,7 +1,7 @@
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
+  const openrouterApiKey = process.env.OPENROUTER_API_KEY
   
-  if (!config.openrouterApiKey) {
+  if (!openrouterApiKey) {
     throw createError({
       statusCode: 500,
       statusMessage: 'OpenRouter API key not configured'
@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   try {
     const response = await fetch('https://openrouter.ai/api/v1/models', {
       headers: {
-        'Authorization': `Bearer ${config.openrouterApiKey}`,
+        'Authorization': `Bearer ${openrouterApiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'http://localhost',
         'X-Title': 'ProCode Models Browser'

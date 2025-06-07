@@ -11,6 +11,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL,
     authSecret: process.env.NUXT_AUTH_SECRET,
+    jwtSecret: process.env.JWT_SECRET,
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     githubClientId: process.env.GITHUB_CLIENT_ID,

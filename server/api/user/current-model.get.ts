@@ -16,7 +16,8 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Verify JWT token
-    const decoded = jwt.verify(token, config.authSecret) as { userId: string }
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret'
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string }
     
     // Get user's current model and preferred models
     const user = await prisma.user.findUnique({

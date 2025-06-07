@@ -13,7 +13,7 @@ console.log('🔧 Using bot token:', token ? 'TOKEN_FOUND' : 'NO_TOKEN');
 const dbClient = new Client({
   host: 'postgres',
   port: 5432,
-  database: 'procode',
+  database: 'procode_dev',
   user: 'postgres',
   password: 'password'
 });
@@ -24,6 +24,17 @@ const bot = new TelegramBot(token, {
 });
 
 console.log('🤖 Telegram Bot Microservice starting...');
+
+// Global error handlers
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('❌ Stack:', error.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise);
+  console.error('❌ Reason:', reason);
+});
 
 // Initialize database connection
 async function initDatabase() {
@@ -43,12 +54,17 @@ bot.on('message', async (msg) => {
   const username = msg.from.username || msg.from.first_name;
   
   console.log(`📩 Message from ${username} (${chatId}): ${text}`);
+  console.log(`🔍 Message length: ${text.length}, first 20 chars: "${text.substring(0, 20)}"`);
+  console.log(`🔍 Checking if text starts with '/connect ': ${text.startsWith('/connect ')}`);
   
   try {
     // Handle /connect command
     if (text.startsWith('/connect ')) {
+      console.log(`🔥 DETECTED /connect command`);
       const token = text.replace('/connect ', '').trim();
+      console.log(`🔍 About to call handleConnectCommand with token length: ${token.length}`);
       await handleConnectCommand(chatId, token, username);
+      console.log(`✅ handleConnectCommand completed successfully`);
       return;
     }
     
@@ -68,19 +84,33 @@ bot.on('message', async (msg) => {
     }
     
   } catch (error) {
-    console.error('Error handling message:', error);
-    await bot.sendMessage(chatId, '❌ Wystąpił błąd. Spróbuj ponownie.');
+    console.error('❌ Error handling message:', error);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    try {
+      await bot.sendMessage(chatId, '❌ Wystąpił błąd. Spróbuj ponownie.');
+    } catch (sendError) {
+      console.error('❌ Failed to send error message:', sendError);
+    }
   }
 });
 
 // Handle /connect command
 async function handleConnectCommand(chatId, connectionToken, username) {
+  console.log(`🔥 ENTERING handleConnectCommand with token length: ${connectionToken.length}`);
   try {
+    console.log(`🔍 Looking for connection token with length: ${connectionToken.length}`);
+    
     // Find telegram connection by token
     const result = await dbClient.query(
       'SELECT tc.*, u.email FROM telegram_connections tc JOIN users u ON tc."userId" = u.id WHERE tc."connectionToken" = $1',
       [connectionToken]
     );
+    
+    console.log(`🔍 Query result: found ${result.rows.length} rows`);
+    if (result.rows.length > 0) {
+      console.log(`🔍 Found connection for user: ${result.rows[0].email}`);
+    }
     
     if (result.rows.length === 0) {
       await bot.sendMessage(chatId, '❌ Token nieprawidłowy lub wygasł. Wygeneruj nowy token w aplikacji.');
@@ -106,7 +136,9 @@ async function handleConnectCommand(chatId, connectionToken, username) {
     console.log(`✅ User ${connection.email} connected with chat ID ${chatId}`);
     
   } catch (error) {
-    console.error('Error in connect command:', error);
+    console.error('❌ Error in connect command:', error);
+    console.error('❌ Error details:', error.message);
+    console.error('❌ Error stack:', error.stack);
     await bot.sendMessage(chatId, '❌ Wystąpił błąd podczas łączenia. Spróbuj ponownie.');
   }
 }

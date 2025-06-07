@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken'
 import { prisma } from '~/lib/prisma'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   const body = await readBody(event)
   const startTime = Date.now()
   
@@ -13,13 +12,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  console.log('Runtime config check:', {
-    hasOpenrouterKey: !!config.openrouterApiKey,
-    keyLength: config.openrouterApiKey?.length || 0,
-    keyPrefix: config.openrouterApiKey?.substring(0, 10) || 'undefined'
+  const openrouterApiKey = process.env.OPENROUTER_API_KEY
+  
+  console.log('API key check:', {
+    hasOpenrouterKey: !!openrouterApiKey,
+    keyLength: openrouterApiKey?.length || 0,
+    keyPrefix: openrouterApiKey?.substring(0, 10) || 'undefined'
   })
 
-  if (!config.openrouterApiKey) {
+  if (!openrouterApiKey) {
     throw createError({
       statusCode: 500,
       statusMessage: 'OpenRouter API key not configured'
@@ -32,7 +33,8 @@ export default defineEventHandler(async (event) => {
   try {
     const token = getCookie(event, 'auth-token')
     if (token) {
-      const decoded = jwt.verify(token, config.authSecret) as { userId: string }
+      const jwtSecret = process.env.JWT_SECRET || 'fallback-secret'
+      const decoded = jwt.verify(token, jwtSecret) as { userId: string }
       const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
         select: { currentModel: true }
@@ -62,7 +64,7 @@ export default defineEventHandler(async (event) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.openrouterApiKey}`,
+        'Authorization': `Bearer ${openrouterApiKey}`,
         'HTTP-Referer': 'http://localhost:3000',
         'X-Title': 'ProCode Chat App'
       },
@@ -78,7 +80,7 @@ export default defineEventHandler(async (event) => {
         statusText: response.statusText,
         body: errorText,
         model: modelToUse,
-        hasApiKey: !!config.openrouterApiKey
+        hasApiKey: !!openrouterApiKey
       })
       throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`)
     }
@@ -92,9 +94,9 @@ export default defineEventHandler(async (event) => {
     // Get model metadata from our models cache/API
     let modelData = null
     try {
-      const modelsResponse = await fetch(`${config.public.apiBase || '/api'}/models`, {
+      const modelsResponse = await fetch('/api/models', {
         headers: {
-          'Authorization': `Bearer ${config.openrouterApiKey}`
+          'Authorization': `Bearer ${openrouterApiKey}`
         }
       })
       if (modelsResponse.ok) {

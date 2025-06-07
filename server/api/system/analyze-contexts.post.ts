@@ -11,7 +11,6 @@ interface ContextAnalysisResult {
 }
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   
   // This endpoint should be called by a cron job every hour
   // For security, you might want to add API key verification here
@@ -266,8 +265,7 @@ async function sendProactiveMessage(messageId: string) {
 }
 
 async function sendTelegramMessage(chatId: string, text: string) {
-  const config = useRuntimeConfig()
-  const botToken = config.telegramBotToken
+  const botToken = process.env.TELEGRAM_BOT_TOKEN
   
   if (!botToken) {
     console.error('Telegram bot token not configured')

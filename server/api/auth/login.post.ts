@@ -36,10 +36,10 @@ export default defineEventHandler(async (event) => {
     }
     
     // Create JWT
-    const config = useRuntimeConfig()
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret'
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      config.authSecret || 'fallback-secret',
+      jwtSecret,
       { expiresIn: '7d' }
     )
     

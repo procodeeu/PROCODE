@@ -23,7 +23,6 @@ interface TelegramUpdate {
 }
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   
   // Verify webhook is from Telegram (you should implement proper verification)
   // For now, we'll just process the webhook
@@ -139,8 +138,7 @@ Po połączeniu będziesz otrzymywać inteligentne powiadomienia dostosowane do 
 })
 
 async function sendTelegramMessage(chatId: string, text: string) {
-  const config = useRuntimeConfig()
-  const botToken = config.telegramBotToken
+  const botToken = process.env.TELEGRAM_BOT_TOKEN
   
   if (!botToken) {
     console.error('Telegram bot token not configured')

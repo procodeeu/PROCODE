@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken'
 import { prisma } from '~/lib/prisma'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   const conversationId = getRouterParam(event, 'id')
   const { role, content, metadata, responseMetadata } = await readBody(event)
   
@@ -32,7 +31,8 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Verify JWT token
-    const decoded = jwt.verify(token, config.authSecret) as { userId: string }
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-secret'
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string }
     
     // Verify user owns this conversation
     const conversation = await prisma.conversation.findFirst({
