@@ -1,294 +1,234 @@
-# PROCODE AI Platform 🤖
+# PROCODE AI - Django + Vue.js + Telegram Bot
 
-A comprehensive AI chat application with Telegram integration, built with modern microservices architecture. PROCODE combines powerful AI capabilities with intuitive user experience and enterprise-grade features.
+Inteligentny asystent AI z integracją Telegram, przepisany na Django backend z Vue.js frontend.
 
-## 🏗️ Architecture Overview
+## 🚀 Funkcjonalności
 
-### Microservices Architecture
-PROCODE follows a microservices pattern with three main components:
+- **Django REST API** - Nowoczesny backend z Django 4.2
+- **Vue.js 3 Frontend** - Identyczny design jak poprzednio
+- **PostgreSQL** - Nowa czysta baza danych
+- **Telegram Bot** - Wykorzystuje istniejący bot (32-znakowe tokeny)
+- **JWT Authentication** - Bezpieczne uwierzytelnianie
+- **Docker** - Gotowe do wdrożenia na VPS
+- **Real-time Chat** - WebSocket chat z AI
+- **Kontekst użytkownika** - Personalizacja AI
+
+## 📦 Architektura
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Web App       │    │  Telegram Bot   │    │   PostgreSQL    │
-│   (Nuxt.js)     │    │  Microservice   │    │   Database      │
-│                 │    │                 │    │                 │
-│ • Dashboard     │◄──►│ • AI Chat       │◄──►│ • Users         │
-│ • Chat Panel    │    │ • Notifications │    │ • Conversations │
-│ • Models Table  │    │ • Proactive Msg │    │ • Messages      │
-│ • User Context  │    │ • Polling       │    │ • Contexts      │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-        │                        │                        │
-        └────────────────────────┼────────────────────────┘
-                               Docker Compose Network
+├── procode/                    # Django project settings
+├── core/                       # User management & authentication
+├── chat/                       # Chat conversations & AI integration
+├── telegram_integration/       # Telegram bot integration
+├── frontend/                   # Vue.js 3 frontend
+├── scripts/                    # Deployment scripts
+└── docker-compose.django.yml   # Docker configuration
 ```
 
-### Technology Stack
-- **Frontend**: Nuxt.js 3 + TypeScript + Tailwind CSS
-- **Backend**: Node.js + Express (via Nuxt server API)
-- **Database**: PostgreSQL with Prisma ORM
-- **AI Integration**: OpenRouter API (multi-model support)
-- **Messaging**: Telegram Bot API
-- **Authentication**: JWT with secure cookies
-- **Containerization**: Docker + Docker Compose
-- **Voice**: Web Speech API for voice-to-text
+## 🛠️ Lokalne uruchomienie
 
-## 🚀 Key Features
-
-### 🎯 AI Chat Experience
-- **Multi-Model Support**: 100+ AI models via OpenRouter
-- **Voice Recognition**: Polish language speech-to-text
-- **Real-time Chat**: Claude-style bubble interface
-- **Conversation History**: Complete chat persistence
-- **Model Selection**: User preference management
-
-### 📱 Telegram Integration
-- **Bi-directional Chat**: Full AI conversations via Telegram
-- **Proactive Messaging**: Context-aware notifications
-- **Secure Connection**: Token-based user linking
-- **Multi-platform**: Web + Telegram unified experience
-
-### 👤 User Context System
-- **Personal Profiles**: Bio, goals, preferences
-- **Professional Context**: Work environment, role, challenges
-- **AI Personalization**: Context-aware responses
-- **Privacy-First**: User-controlled data sharing
-
-### 📊 Enterprise Features
-- **Advanced Analytics**: Usage metrics and cost tracking
-- **Response Metadata**: Model performance insights
-- **Conversation Archival**: Complete data retention
-- **Microservices Architecture**: Scalable and maintainable
-
-## 🛠️ Installation & Setup
-
-### Prerequisites
-- Node.js 18+ 
-- Docker & Docker Compose
-- PostgreSQL (or use Docker version)
-- OpenRouter API account
-- Telegram Bot Token
-
-### Environment Variables
-
-Create `.env` file in the root directory:
-
+1. **Sklonuj repozytorium**
 ```bash
-# Database Configuration
-DATABASE_URL="postgresql://postgres:password@localhost:5432/procode"
-
-# OpenRouter AI API
-OPENROUTER_API_KEY="your_openrouter_api_key_here"
-
-# Telegram Bot
-TELEGRAM_BOT_TOKEN="your_telegram_bot_token_here"
-
-# JWT Security
-JWT_SECRET="your_super_secure_jwt_secret_here"
-
-# Application
-NODE_ENV="development"
-NUXT_SECRET_KEY="your_nuxt_secret_key"
+git clone <repo-url>
+cd PROCODE
 ```
 
-### Quick Start with Docker
-
+2. **Skonfiguruj environment**
 ```bash
-# Clone repository
-git clone https://github.com/your-username/procode.git
+cp .env.django .env
+# Edytuj .env z własnymi wartościami
+```
+
+3. **Uruchom aplikację**
+```bash
+# Opcja 1: Używając skryptu (zalecane)
+./start_app.sh
+
+# Opcja 2: Ręcznie
+export $(cat .env.django | xargs)
+docker-compose -f docker-compose.django.yml up -d --build
+```
+
+4. **Otwórz aplikację**
+- Frontend: http://localhost:443 (HTTP na porcie 443)
+- Django Admin: http://localhost:8000/admin
+- API: http://localhost:8000/api
+
+## 🌐 Wdrożenie na VPS
+
+1. **Przygotuj VPS**
+```bash
+# Zainstaluj Docker i Docker Compose
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+sudo usermod -aG docker $USER
+```
+
+2. **Skopiuj projekt na VPS**
+```bash
+# Za pomocą git
+git clone <repo-url> procode
 cd procode
 
-# Start all services (app + telegram-bot + postgres)
-npm run dev:docker:full
-
-# OR start step by step
-docker-compose up --build
+# Lub scp
+scp -r ./PROCODE user@vps-ip:/home/user/procode
 ```
 
-### Manual Setup
+3. **Skonfiguruj środowisko**
+```bash
+cp .env.django .env
+nano .env
+# Ustaw właściwe wartości dla produkcji:
+# - DEBUG=False
+# - DJANGO_SECRET_KEY=<strong-secret>
+# - JWT_SECRET=<strong-secret>
+# - Własne hasła do bazy danych
+```
+
+4. **Uruchom deployment**
+```bash
+./deploy_vps.sh
+```
+
+## 🔧 Konfiguracja
+
+### Environment Variables (.env)
 
 ```bash
-# Install dependencies
-npm install
+# Django Configuration
+DEBUG=False
+DJANGO_SECRET_KEY=your-super-secret-django-key
 
-# Generate Prisma client
-npx prisma generate
+# Database Configuration  
+POSTGRES_DB=procode_django
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=strong-password
 
-# Run database migrations
-npx prisma db push
+# OpenRouter AI API
+OPENROUTER_API_KEY=sk-or-v1-...
 
-# Start development server
-npm run dev
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=1234567:ABCDEF...
 
-# Start Telegram bot (separate terminal)
-node telegram-bot-local.js
+# JWT Security
+JWT_SECRET=your-jwt-secret-key
 ```
 
-## 🔧 Configuration Guide
+### Dostępne API Endpoints
 
-### 1. OpenRouter API Setup
-1. Visit [OpenRouter.ai](https://openrouter.ai)
-2. Create account and generate API key
-3. Add key to `.env` as `OPENROUTER_API_KEY`
-4. Configure model preferences in app dashboard
+```
+# Authentication
+POST /api/auth/register/
+POST /api/auth/login/
+POST /api/auth/logout/
 
-### 2. Telegram Bot Setup
-1. Message [@BotFather](https://t.me/botfather) on Telegram
-2. Create new bot with `/newbot` command
-3. Copy token to `.env` as `TELEGRAM_BOT_TOKEN`
-4. Start bot microservice: `docker-compose up telegram-bot`
+# User Context
+GET /api/auth/context/
+POST /api/auth/context/update/
 
-### 3. Database Configuration
-**Docker (Recommended):**
+# Models
+GET /api/auth/current-model/
+POST /api/auth/current-model/update/
+
+# Chat
+GET /api/chat/conversations/
+POST /api/chat/conversations/create/
+GET /api/chat/conversations/{id}/
+POST /api/chat/conversations/{id}/messages/
+
+# Telegram
+POST /api/telegram/generate-token/
+GET /api/telegram/status/
+```
+
+## 🤖 Telegram Bot
+
+Bot automatycznie łączy się z Django backend. Funkcjonalności:
+
+- `/start` - Instrukcje połączenia
+- `/connect <token>` - Połączenie konta (32-znakowe tokeny)
+- Rozmowy z AI z kontekstem użytkownika
+- Proaktywne powiadomienia
+
+## 📊 Administracja
+
+Django Admin jest dostępny pod `/admin/`:
+
+**Domyślne konto admin:**
+- Email: `admin@procode.com`
+- Hasło: `admin123`
+
+**Zarządzaj:**
+- Użytkownikami
+- Konwersacjami  
+- Wiadomościami
+- Połączeniami Telegram
+
+## 🔒 Bezpieczeństwo
+
+- JWT tokeny w httpOnly cookies
+- CORS skonfigurowany
+- PostgreSQL z własnymi hasłami
+- Secrets w environment variables
+- Rate limiting (wbudowany w Django)
+
+## 📱 Frontend (Vue.js 3)
+
+Identyczny design jak wcześniej:
+- Responsywny dark theme
+- Tailwind CSS  
+- Vue Router
+- Pinia state management
+- Axios HTTP client
+
+## 🚨 Troubleshooting
+
+### Sprawdź logi
 ```bash
-# Automatic setup with docker-compose
-docker-compose up postgres
+# Wszystkie serwisy
+docker-compose -f docker-compose.django.yml logs -f
+
+# Konkretny serwis
+docker-compose -f docker-compose.django.yml logs -f django
+docker-compose -f docker-compose.django.yml logs -f telegram-bot
 ```
 
-**Manual PostgreSQL:**
+### Restart serwisów
 ```bash
-# Create database
-createdb procode
-
-# Run migrations
-npx prisma db push
+docker-compose -f docker-compose.django.yml restart
 ```
 
-### 4. JWT Security
-Generate secure JWT secret:
+### Reset bazy danych
 ```bash
-# Generate 64-character random string
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+docker-compose -f docker-compose.django.yml down -v
+docker-compose -f docker-compose.django.yml up -d --build
 ```
 
-## 📱 Usage Guide
+## 📈 Skalowanie na VPS
 
-### Web Application
-1. **Register/Login**: Create account at `http://localhost:3000`
-2. **Select AI Model**: Choose preferred model in Models table
-3. **Set Context**: Fill user context form for personalized responses
-4. **Start Chatting**: Use chat panel with voice or text input
+Dla większej wydajności:
 
-### Telegram Integration
-1. **Generate Token**: Click "Connect Telegram" in dashboard
-2. **Link Account**: Send `/connect <token>` to your bot
-3. **Chat with AI**: Send any message to bot for AI responses
-4. **Proactive Messages**: Receive context-aware notifications
+1. **Dodaj nginx reverse proxy**
+2. **Skonfiguruj SSL (certbot)**
+3. **Zwiększ workers w gunicorn**
+4. **Dodaj Redis cache**
+5. **Oddziel bazę danych**
 
-### Voice Features
-- **Activation**: Click microphone icon in chat
-- **Polish Support**: Optimized for Polish language recognition
-- **Real-time**: Live transcription with instant AI responses
+## 🆕 Migracja z Nuxt.js
 
-## 🏢 Business Applications
+Wszystkie dane z poprzedniej wersji można zmigrować:
+1. Eksportuj dane z poprzedniej bazy
+2. Stwórz skrypt migracji Django
+3. Zaimportuj do nowych modeli
 
-### Individual Users
-- **Personal AI Assistant**: Context-aware daily helper
-- **Learning Companion**: Educational support with memory
-- **Productivity Boost**: Task management and goal tracking
+## 📞 Wsparcie
 
-### Small Teams
-- **Shared Knowledge Base**: Team context and preferences
-- **Communication Hub**: Unified AI across web and mobile
-- **Project Assistance**: Context-aware project support
-
-### Enterprise
-- **Scalable Architecture**: Microservices for high availability
-- **Data Privacy**: Self-hosted with full data control
-- **Custom Integration**: API-first design for extensions
-- **Analytics**: Comprehensive usage and performance metrics
-
-## 🔒 Security Features
-
-### Data Protection
-- **JWT Authentication**: Secure token-based sessions
-- **Database Encryption**: Sensitive data protection
-- **Environment Secrets**: Secure configuration management
-- **User Isolation**: Complete data separation
-
-### Privacy Controls
-- **Opt-in Context**: User-controlled information sharing
-- **Data Retention**: Configurable message history
-- **Secure Tokens**: Encrypted Telegram connections
-- **GDPR Ready**: Data export and deletion capabilities
-
-## 📊 Monitoring & Analytics
-
-### Built-in Metrics
-- **AI Response Times**: Performance monitoring
-- **Model Usage**: Cost and efficiency tracking
-- **User Engagement**: Conversation analytics
-- **Error Rates**: System health monitoring
-
-### Cost Management
-- **Token Tracking**: Real-time usage monitoring
-- **Model Comparison**: Cost-per-response analysis
-- **Budget Alerts**: Spending limit notifications
-- **Optimization**: Model selection recommendations
-
-## 🚀 Deployment
-
-### Development
-```bash
-npm run dev:docker:full
-```
-
-### Production
-```bash
-# Build and deploy
-docker-compose -f docker-compose.prod.yml up -d
-
-# With custom domain
-docker-compose up -d --scale app=3
-```
-
-### Environment-Specific Configs
-- **Development**: Hot reload, debug logging
-- **Staging**: Production build, test data
-- **Production**: Optimized build, monitoring
-
-## 📚 Documentation
-
-### Core Documentation
-- **[🏗️ Architecture Overview](https://github.com/procodeeu/procode/blob/main/docs/architecture-overview.md)** - System design and technical decisions
-- **[📝 API Reference](https://github.com/procodeeu/procode/blob/main/docs/api-reference.md)** - Complete API endpoints with examples
-- **[🗄️ Database Schema](https://github.com/procodeeu/procode/blob/main/docs/database-schema.md)** - Data model and relationships
-- **[🚀 Deployment Guide](https://github.com/procodeeu/procode/blob/main/docs/deployment-guide.md)** - Production deployment strategies
-
-## 🤝 Contributing
-
-### Development Setup
-```bash
-# Fork repository
-git clone https://github.com/your-username/procode.git
-
-# Create feature branch
-git checkout -b feature/amazing-feature
-
-# Install dependencies
-npm install
-
-# Start development environment
-npm run dev:docker:full
-```
-
-### Code Standards
-- **TypeScript**: Strict type checking
-- **ESLint**: Code quality enforcement
-- **Prettier**: Consistent formatting
-- **Conventional Commits**: Standardized commit messages
-
-### Testing
-```bash
-# Run tests
-npm test
-
-# Run e2e tests
-npm run test:e2e
-
-# Check coverage
-npm run test:coverage
-```
+W przypadku problemów:
+1. Sprawdź logi Docker
+2. Zweryfikuj konfigurację .env
+3. Upewnij się że porty są otwarte
+4. Sprawdź dostęp do bazy danych
 
 ---
 
-*PROCODE - Empowering conversations with intelligent AI integration* 🚀
+**Nowa aplikacja Django jest gotowa do wdrożenia na VPS!** 🎉

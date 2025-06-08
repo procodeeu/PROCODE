@@ -1,0 +1,39 @@
+# Build stage
+FROM node:18-alpine as build
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copy source code
+COPY frontend/ ./
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+
+# Install openssl for self-signed certificates
+RUN apk add --no-cache openssl
+
+# Copy built files
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.simple.conf /etc/nginx/nginx.conf
+
+# Create self-signed certificate for local development
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/ssl/private/nginx-selfsigned.key \
+    -out /etc/ssl/certs/nginx-selfsigned.crt \
+    -subj "/C=PL/ST=Poland/L=Warsaw/O=PROCODE/CN=localhost"
+
+# Create directory for custom SSL certificates
+RUN mkdir -p /etc/nginx/ssl
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

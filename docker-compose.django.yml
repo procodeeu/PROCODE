@@ -1,0 +1,130 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-procode_django}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 512MB
+        reservations:
+          memory: 256MB
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 128MB
+
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    restart: unless-stopped
+    environment:
+      - DEBUG=${DEBUG:-False}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-dev-key-not-secure}
+      - POSTGRES_DB=${POSTGRES_DB:-procode_django}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-jwt-dev-key-not-secure}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./static:/app/static
+      - ./media:/app/media
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+        reservations:
+          memory: 512MB
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    ports:
+      - "443:80"
+    depends_on:
+      - django
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+    deploy:
+      resources:
+        limits:
+          memory: 128MB
+
+  telegram-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    restart: unless-stopped
+    command: python telegram_bot_django.py
+    environment:
+      - DJANGO_SETTINGS_MODULE=procode.settings
+      - DEBUG=${DEBUG:-False}
+      - POSTGRES_DB=${POSTGRES_DB:-procode_django}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-jwt-dev-key-not-secure}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-dev-key-not-secure}
+    depends_on:
+      - db
+      - redis
+      - django
+    deploy:
+      resources:
+        limits:
+          memory: 256MB
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    restart: unless-stopped
+    command: celery -A procode worker -l info
+    environment:
+      - DJANGO_SETTINGS_MODULE=procode.settings
+      - DEBUG=${DEBUG:-False}
+      - POSTGRES_DB=${POSTGRES_DB:-procode_django}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-jwt-dev-key-not-secure}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-dev-key-not-secure}
+    depends_on:
+      - db
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 512MB
+
+volumes:
+  postgres_data:
