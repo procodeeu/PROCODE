@@ -1,5 +1,23 @@
 # PROCODE AI Platform
 
+---
+
+### 🇬🇧 AI Collaboration Note  
+This project was developed as part of an exploration into how modern AI tools (like GPT-4) can support software development.  
+I used AI as an assistant for tasks such as code generation, architecture brainstorming, and naming conventions – but every piece of code was personally reviewed, adapted, and tested by me.  
+The goal was not to replace development work with prompts, but to integrate AI responsibly and enhance productivity while maintaining full control and understanding of the codebase.  
+This project is a reflection of my ability to lead complex systems from idea to execution, combining both human insight and modern tools.
+
+---
+
+### 🇵🇱 Notatka o współpracy z AI  
+Ten projekt powstał jako forma eksploracji potencjału nowoczesnych narzędzi AI (takich jak GPT-4) w pracy programisty.  
+Sztuczna inteligencja wspierała mnie m.in. przy generowaniu kodu, planowaniu architektury i tworzeniu nazewnictwa – ale **każdy fragment kodu był przeze mnie osobiście sprawdzony, przystosowany i przetestowany**.  
+Nie chodziło o zastąpienie pracy developera promptami, lecz o **odpowiedzialne wykorzystanie AI** do zwiększenia produktywności przy zachowaniu pełnego zrozumienia i kontroli nad tworzonym systemem.  
+Ten projekt jest świadectwem mojej umiejętności prowadzenia złożonych systemów od pomysłu do działania, z wykorzystaniem zarówno własnej wiedzy, jak i nowoczesnych narzędzi.
+
+---
+
 A comprehensive AI chat application with Telegram integration, built with modern microservices architecture. PROCODE combines powerful AI capabilities with intuitive user experience.
 
 ## Architecture Overview
